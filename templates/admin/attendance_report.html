@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Attendance Report — EduTrack{% endblock %}
+{% block page_title %}Attendance Report{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="section-title">Attendance Report</h2>
+        <p class="section-sub">Student-wise attendance summary</p>
+    </div>
+    <a href="{{ url_for('admin_attendance') }}" class="btn btn-ghost">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<div class="card">
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>Student</th>
+                <th>Roll No</th>
+                <th>Course</th>
+                <th>Year</th>
+                <th>Present</th>
+                <th>Absent</th>
+                <th>Total</th>
+                <th>Percentage</th>
+                <th>Status</th>
+            </tr></thead>
+            <tbody>
+            {% for r in report %}
+            <tr>
+                <td>
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;flex-shrink:0">
+                            {{ r.name[0].upper() }}
+                        </div>
+                        <a href="{{ url_for('view_student', sid=r.id) }}" style="color:var(--text);text-decoration:none;font-weight:500">{{ r.name }}</a>
+                    </div>
+                </td>
+                <td><span class="badge badge-blue">{{ r.roll_no }}</span></td>
+                <td style="font-size:13px;color:var(--text-muted)">{{ r.course }}</td>
+                <td><span class="badge badge-purple">Y{{ r.year }}</span></td>
+                <td style="color:var(--green);font-weight:600">{{ r.present }}</td>
+                <td style="color:var(--red);font-weight:600">{{ r.absent }}</td>
+                <td style="color:var(--text-muted)">{{ r.total }}</td>
+                <td>
+                    <div style="display:flex;align-items:center;gap:10px;min-width:120px">
+                        <div class="progress" style="flex:1;height:5px">
+                            <div class="progress-bar" style="width:{{ r.percentage }}%;background:{% if r.percentage >= 75 %}var(--green){% elif r.percentage >= 60 %}var(--yellow){% else %}var(--red){% endif %}"></div>
+                        </div>
+                        <span style="font-size:13px;font-weight:600;min-width:38px">{{ r.percentage }}%</span>
+                    </div>
+                </td>
+                <td>
+                    {% if r.percentage >= 75 %}
+                    <span class="badge badge-green"><i class="fas fa-check"></i> Good</span>
+                    {% elif r.percentage >= 60 %}
+                    <span class="badge badge-yellow"><i class="fas fa-exclamation"></i> Low</span>
+                    {% else %}
+                    <span class="badge badge-red"><i class="fas fa-xmark"></i> Critical</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

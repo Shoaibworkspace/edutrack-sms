@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — EduTrack{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Stat Cards -->
+<div class="stat-grid">
+    <div class="stat-card" style="--glow-color: rgba(79,142,247,0.12)">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value" style="color:var(--accent)">{{ total_students }}</div>
+        <div class="stat-sub">{{ total_courses }} active courses</div>
+        <div class="stat-icon" style="background:rgba(79,142,247,0.1);color:var(--accent)">
+            <i class="fas fa-users"></i>
+        </div>
+    </div>
+    <div class="stat-card" style="--glow-color: rgba(34,197,94,0.12)">
+        <div class="stat-label">Present Today</div>
+        <div class="stat-value" style="color:var(--green)">{{ present_today }}</div>
+        <div class="stat-sub">{{ absent_today }} absent</div>
+        <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)">
+            <i class="fas fa-user-check"></i>
+        </div>
+    </div>
+    <div class="stat-card" style="--glow-color: rgba(124,92,252,0.12)">
+        <div class="stat-label">Overall Attendance</div>
+        <div class="stat-value" style="color:var(--accent2)">{{ overall_att_pct }}%</div>
+        <div class="stat-sub">
+            <div class="progress" style="width:120px; display:inline-block">
+                <div class="progress-bar" style="width:{{ overall_att_pct }}%;background:var(--accent2)"></div>
+            </div>
+        </div>
+        <div class="stat-icon" style="background:rgba(124,92,252,0.1);color:var(--accent2)">
+            <i class="fas fa-chart-line"></i>
+        </div>
+    </div>
+    <div class="stat-card" style="--glow-color: rgba(245,158,11,0.12)">
+        <div class="stat-label">Active Courses</div>
+        <div class="stat-value" style="color:var(--yellow)">{{ total_courses }}</div>
+        <div class="stat-sub">Academic programs</div>
+        <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--yellow)">
+            <i class="fas fa-book-open"></i>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Row -->
+<div class="grid-2" style="margin-bottom:20px">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-chart-bar" style="color:var(--accent);margin-right:8px"></i>Attendance Trend (7 Days)</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="attChart"></canvas>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-chart-pie" style="color:var(--accent2);margin-right:8px"></i>Grade Distribution</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="gradeChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Row -->
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-clock-rotate-left" style="color:var(--cyan);margin-right:8px"></i>Recent Students</span>
+            <a href="{{ url_for('admin_students') }}" class="btn btn-ghost btn-sm">View All</a>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th>Name</th><th>Roll No</th><th>Course</th><th>Year</th>
+                </tr></thead>
+                <tbody>
+                {% for s in recent_students %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">
+                                {{ s['name'][0].upper() }}
+                            </div>
+                            <a href="{{ url_for('view_student', sid=s['id']) }}" style="color:var(--text);text-decoration:none;font-weight:500">{{ s['name'] }}</a>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-blue">{{ s['roll_no'] }}</span></td>
+                    <td style="color:var(--text-muted);font-size:13px">{{ s['course'] }}</td>
+                    <td><span class="badge badge-purple">Year {{ s['year'] }}</span></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-graduation-cap" style="color:var(--yellow);margin-right:8px"></i>Enrollment by Course</span>
+        </div>
+        <div class="chart-container">
+            <canvas id="courseChart"></canvas>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const attTrend = {{ att_trend|safe }};
+const gradeData = {{ grade_dist|safe }};
+const courseData = {{ course_dist|safe }};
+
+// Attendance Chart
+new Chart(document.getElementById('attChart'), {
+    type: 'bar',
+    data: {
+        labels: attTrend.map(d => {
+            const dt = new Date(d.date);
+            return dt.toLocaleDateString('en-US', {month:'short', day:'numeric'});
+        }),
+        datasets: [
+            {
+                label: 'Present',
+                data: attTrend.map(d => d.present),
+                backgroundColor: 'rgba(34,197,94,0.7)',
+                borderRadius: 5, borderSkipped: false,
+            },
+            {
+                label: 'Absent',
+                data: attTrend.map(d => d.total - d.present),
+                backgroundColor: 'rgba(239,68,68,0.5)',
+                borderRadius: 5, borderSkipped: false,
+            }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 11 } } } },
+        scales: {
+            x: { stacked: true, grid: { display: false } },
+            y: { stacked: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { precision: 0 } }
+        }
+    }
+});
+
+// Grade Chart
+const gradeColors = {
+    'A+': '#22c55e', 'A': '#4ade80', 'B': '#4f8ef7',
+    'C': '#f59e0b', 'D': '#f97316', 'F': '#ef4444'
+};
+new Chart(document.getElementById('gradeChart'), {
+    type: 'doughnut',
+    data: {
+        labels: Object.keys(gradeData),
+        datasets: [{
+            data: Object.values(gradeData),
+            backgroundColor: Object.keys(gradeData).map(g => gradeColors[g] + 'bb'),
+            borderColor: Object.keys(gradeData).map(g => gradeColors[g]),
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+            legend: { position: 'right', labels: { boxWidth: 10, font: { size: 12 }, padding: 12 } }
+        },
+        cutout: '65%'
+    }
+});
+
+// Course Chart
+new Chart(document.getElementById('courseChart'), {
+    type: 'bar',
+    data: {
+        labels: courseData.map(d => d.course),
+        datasets: [{
+            label: 'Students',
+            data: courseData.map(d => d.count),
+            backgroundColor: ['rgba(79,142,247,0.7)', 'rgba(124,92,252,0.7)', 'rgba(6,182,212,0.7)', 'rgba(245,158,11,0.7)'],
+            borderRadius: 6, borderSkipped: false,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+            x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { precision: 0 } },
+            y: { grid: { display: false } }
+        }
+    }
+});
+</script>
+{% endblock %}

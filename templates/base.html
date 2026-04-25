@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>{% block title %}EduTrack SMS{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet"/>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a0c10;
+            --surface: #111318;
+            --surface2: #181c24;
+            --surface3: #1e2330;
+            --border: rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.12);
+            --text: #e8eaf0;
+            --text-muted: #7a8299;
+            --text-dim: #4a5168;
+            --accent: #4f8ef7;
+            --accent2: #7c5cfc;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #f59e0b;
+            --orange: #f97316;
+            --cyan: #06b6d4;
+            --pink: #ec4899;
+            --sidebar-w: 260px;
+            --radius: 12px;
+            --radius-sm: 8px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        h1,h2,h3,h4,h5,h6 { font-family: 'Syne', sans-serif; }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            position: fixed; left:0; top:0; bottom:0;
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column;
+            z-index: 100;
+            transition: transform .3s ease;
+        }
+        .sidebar-brand {
+            padding: 24px 20px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+        .brand-logo {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .brand-icon {
+            width: 38px; height: 38px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; color: white;
+            box-shadow: 0 4px 15px rgba(79,142,247,0.3);
+        }
+        .brand-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+        .brand-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+        .nav-section-label {
+            font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+            color: var(--text-dim); text-transform: uppercase;
+            padding: 12px 8px 6px; margin-top: 8px;
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: var(--radius-sm);
+            color: var(--text-muted); text-decoration: none;
+            font-size: 14px; font-weight: 500;
+            transition: all .2s; margin-bottom: 2px;
+            position: relative;
+        }
+        .nav-item:hover { background: var(--surface2); color: var(--text); }
+        .nav-item.active {
+            background: linear-gradient(135deg, rgba(79,142,247,0.15), rgba(124,92,252,0.1));
+            color: var(--accent);
+            border: 1px solid rgba(79,142,247,0.2);
+        }
+        .nav-item.active::before {
+            content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+            width: 3px; height: 60%; background: var(--accent);
+            border-radius: 0 3px 3px 0;
+        }
+        .nav-item i { width: 18px; text-align: center; font-size: 15px; }
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border);
+        }
+        .user-pill {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px; border-radius: var(--radius-sm);
+            background: var(--surface2);
+        }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: white;
+            flex-shrink: 0;
+        }
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-role { font-size: 11px; color: var(--text-muted); }
+        .logout-btn {
+            color: var(--text-dim); text-decoration: none;
+            font-size: 15px; transition: color .2s;
+        }
+        .logout-btn:hover { color: var(--red); }
+
+        /* ── Main ── */
+        .main-wrap {
+            margin-left: var(--sidebar-w);
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+        }
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 60px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 50;
+        }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+        .topbar-right { display: flex; align-items: center; gap: 12px; }
+        .topbar-date { font-size: 12px; color: var(--text-muted); }
+        .content { padding: 28px; flex: 1; }
+
+        /* ── Flash Messages ── */
+        .flash-list { margin-bottom: 20px; }
+        .flash {
+            padding: 12px 16px; border-radius: var(--radius-sm);
+            font-size: 14px; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 10px;
+            animation: slideIn .3s ease;
+        }
+        @keyframes slideIn { from { opacity:0; transform: translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+        .flash-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2); color: var(--green); }
+        .flash-danger  { background: rgba(239,68,68,0.1);  border: 1px solid rgba(239,68,68,0.2);  color: var(--red); }
+        .flash-warning { background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.2); color: var(--yellow); }
+        .flash-info    { background: rgba(6,182,212,0.1);  border: 1px solid rgba(6,182,212,0.2);  color: var(--cyan); }
+
+        /* ── Cards ── */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+        }
+        .card-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; padding-bottom: 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+
+        /* ── Stat Cards ── */
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 16px; margin-bottom: 24px; }
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            position: relative; overflow: hidden;
+            transition: transform .2s, border-color .2s;
+        }
+        .stat-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+        .stat-card::after {
+            content: ''; position: absolute; top: 0; right: 0;
+            width: 80px; height: 80px;
+            background: radial-gradient(circle, var(--glow-color, rgba(79,142,247,0.1)), transparent 70%);
+            border-radius: 50%; transform: translate(20px,-20px);
+        }
+        .stat-label { font-size: 12px; color: var(--text-muted); font-weight: 500; text-transform: uppercase; letter-spacing: .5px; }
+        .stat-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; margin: 6px 0; line-height: 1; }
+        .stat-sub { font-size: 12px; color: var(--text-muted); }
+        .stat-icon {
+            position: absolute; top: 20px; right: 20px;
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+        }
+
+        /* ── Tables ── */
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            text-align: left; padding: 10px 14px;
+            font-size: 11px; font-weight: 700; letter-spacing: .8px;
+            text-transform: uppercase; color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            background: var(--surface2);
+        }
+        td {
+            padding: 12px 14px; font-size: 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 100px;
+            font-size: 11px; font-weight: 600; letter-spacing: .3px;
+        }
+        .badge-green  { background: rgba(34,197,94,0.1);  color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+        .badge-red    { background: rgba(239,68,68,0.1);  color: var(--red);   border: 1px solid rgba(239,68,68,0.2); }
+        .badge-blue   { background: rgba(79,142,247,0.1); color: var(--accent);border: 1px solid rgba(79,142,247,0.2); }
+        .badge-yellow { background: rgba(245,158,11,0.1); color: var(--yellow);border: 1px solid rgba(245,158,11,0.2); }
+        .badge-orange { background: rgba(249,115,22,0.1); color: var(--orange);border: 1px solid rgba(249,115,22,0.2); }
+        .badge-purple { background: rgba(124,92,252,0.1); color: var(--accent2);border: 1px solid rgba(124,92,252,0.2); }
+        .badge-cyan   { background: rgba(6,182,212,0.1);  color: var(--cyan);  border: 1px solid rgba(6,182,212,0.2); }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 8px 16px; border-radius: var(--radius-sm);
+            font-size: 13px; font-weight: 600;
+            border: none; cursor: pointer; text-decoration: none;
+            transition: all .2s; white-space: nowrap; font-family: 'DM Sans', sans-serif;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: white;
+            box-shadow: 0 4px 14px rgba(79,142,247,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(79,142,247,0.4); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-ghost {
+            background: var(--surface2); color: var(--text);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--surface3); border-color: var(--border2); }
+        .btn-danger { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+        .btn-success { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+        .btn-success:hover { background: rgba(34,197,94,0.2); }
+
+        /* ── Forms ── */
+        .form-group { margin-bottom: 18px; }
+        .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .5px; }
+        .form-control {
+            width: 100%; padding: 10px 14px;
+            background: var(--surface2); border: 1px solid var(--border);
+            border-radius: var(--radius-sm); color: var(--text);
+            font-size: 14px; font-family: 'DM Sans', sans-serif;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,142,247,0.1); }
+        .form-control option { background: var(--surface2); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+        /* ── Search & Filter Bar ── */
+        .filter-bar {
+            display: flex; gap: 12px; align-items: center;
+            margin-bottom: 20px; flex-wrap: wrap;
+        }
+        .filter-bar .form-control { max-width: 240px; }
+        .search-wrap { position: relative; }
+        .search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13px; }
+        .search-wrap .form-control { padding-left: 36px; }
+
+        /* ── Progress Bar ── */
+        .progress { height: 6px; background: var(--surface3); border-radius: 100px; overflow: hidden; }
+        .progress-bar { height: 100%; border-radius: 100px; transition: width .5s ease; }
+
+        /* ── Chart Container ── */
+        .chart-container { position: relative; height: 220px; }
+
+        /* ── Pagination ── */
+        .pagination { display: flex; gap: 4px; align-items: center; margin-top: 20px; justify-content: center; }
+        .page-btn {
+            padding: 6px 12px; border-radius: 6px;
+            font-size: 13px; font-weight: 500; text-decoration: none;
+            color: var(--text-muted); background: var(--surface2);
+            border: 1px solid var(--border); transition: all .2s;
+        }
+        .page-btn:hover, .page-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        /* ── Grade Colors ── */
+        .grade-aplus { color: #22c55e; }
+        .grade-a     { color: #4ade80; }
+        .grade-b     { color: #4f8ef7; }
+        .grade-c     { color: #f59e0b; }
+        .grade-d     { color: #f97316; }
+        .grade-f     { color: #ef4444; }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center; padding: 60px 20px; color: var(--text-muted);
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 16px; color: var(--text-dim); }
+        .empty-state h3 { font-size: 16px; margin-bottom: 8px; color: var(--text); }
+        .empty-state p { font-size: 14px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .main-wrap { margin-left: 0; }
+            .form-row, .form-row-3 { grid-template-columns: 1fr; }
+            .stat-grid { grid-template-columns: 1fr 1fr; }
+            .content { padding: 16px; }
+        }
+
+        /* ── Attendance Toggle ── */
+        .att-toggle {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .toggle-switch { position: relative; width: 44px; height: 22px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; inset: 0; background: var(--surface3);
+            border-radius: 100px; cursor: pointer; transition: .3s;
+            border: 1px solid var(--border);
+        }
+        .toggle-slider:before {
+            content: ''; position: absolute;
+            width: 16px; height: 16px; left: 3px; bottom: 2px;
+            background: var(--text-muted); border-radius: 50%; transition: .3s;
+        }
+        input:checked + .toggle-slider { background: rgba(34,197,94,0.2); border-color: var(--green); }
+        input:checked + .toggle-slider:before { transform: translateX(20px); background: var(--green); }
+
+        /* ── Section Headers ── */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .section-sub { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+        /* ── Grid layouts ── */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        @media (max-width: 1100px) { .grid-3 { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 100px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+    </style>
+    {% block head %}{% endblock %}
+</head>
+<body>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-logo">
+            <div class="brand-icon"><i class="fas fa-graduation-cap"></i></div>
+            <div>
+                <div class="brand-name">EduTrack</div>
+                <div class="brand-sub">Student Management</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        {% if session.get('role') == 'admin' %}
+        <div class="nav-section-label">Main</div>
+        <a href="{{ url_for('admin_dashboard') }}" class="nav-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+            <i class="fas fa-chart-pie"></i> Dashboard
+        </a>
+        <div class="nav-section-label">Academics</div>
+        <a href="{{ url_for('admin_students') }}" class="nav-item {% if 'student' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-users"></i> Students
+        </a>
+        <a href="{{ url_for('admin_attendance') }}" class="nav-item {% if 'attendance' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i> Attendance
+        </a>
+        <a href="{{ url_for('admin_results') }}" class="nav-item {% if 'result' in request.endpoint %}active{% endif %}">
+            <i class="fas fa-award"></i> Results
+        </a>
+        <div class="nav-section-label">Reports</div>
+        <a href="{{ url_for('attendance_report') }}" class="nav-item {% if request.endpoint == 'attendance_report' %}active{% endif %}">
+            <i class="fas fa-file-chart-column"></i> Attendance Report
+        </a>
+        {% else %}
+        <div class="nav-section-label">My Portal</div>
+        <a href="{{ url_for('student_dashboard') }}" class="nav-item {% if request.endpoint == 'student_dashboard' %}active{% endif %}">
+            <i class="fas fa-home"></i> Dashboard
+        </a>
+        <a href="{{ url_for('student_profile') }}" class="nav-item {% if request.endpoint == 'student_profile' %}active{% endif %}">
+            <i class="fas fa-user-circle"></i> My Profile
+        </a>
+        <a href="{{ url_for('student_attendance') }}" class="nav-item {% if request.endpoint == 'student_attendance' %}active{% endif %}">
+            <i class="fas fa-calendar-check"></i> Attendance
+        </a>
+        <a href="{{ url_for('student_results') }}" class="nav-item {% if request.endpoint == 'student_results' %}active{% endif %}">
+            <i class="fas fa-trophy"></i> Results
+        </a>
+        {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-pill">
+            <div class="user-avatar">{{ session.get('user_name', 'U')[0].upper() }}</div>
+            <div class="user-info">
+                <div class="user-name">{{ session.get('user_name', 'User') }}</div>
+                <div class="user-role">{{ session.get('role', '').capitalize() }}</div>
+            </div>
+            <a href="{{ url_for('logout') }}" class="logout-btn" title="Logout">
+                <i class="fas fa-right-from-bracket"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="main-wrap">
+    <div class="topbar">
+        <div class="page-title">{% block page_title %}{% endblock %}</div>
+        <div class="topbar-right">
+            <span class="topbar-date" id="current-date"></span>
+        </div>
+    </div>
+    <div class="content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-list">
+            {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% elif category == 'danger' %}exclamation-circle{% elif category == 'warning' %}triangle-exclamation{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script>
+    // Update date
+    const d = new Date();
+    document.getElementById('current-date').textContent =
+        d.toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric', year:'numeric'});
+
+    // Auto-dismiss flashes
+    setTimeout(() => {
+        document.querySelectorAll('.flash').forEach(el => {
+            el.style.transition = 'opacity .5s'; el.style.opacity = '0';
+            setTimeout(() => el.remove(), 500);
+        });
+    }, 4000);
+
+    // Chart.js global defaults
+    if (window.Chart) {
+        Chart.defaults.color = '#7a8299';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.07)';
+        Chart.defaults.font.family = "'DM Sans', sans-serif";
+    }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

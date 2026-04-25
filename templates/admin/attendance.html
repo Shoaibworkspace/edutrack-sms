@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Attendance — EduTrack{% endblock %}
+{% block page_title %}Mark Attendance{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div>
+        <h2 class="section-title">Attendance</h2>
+        <p class="section-sub">Mark and manage daily attendance</p>
+    </div>
+    <a href="{{ url_for('attendance_report') }}" class="btn btn-ghost">
+        <i class="fas fa-file-chart-column"></i> Full Report
+    </a>
+</div>
+
+<!-- Date & Filter -->
+<div class="card" style="margin-bottom:20px;padding:16px">
+    <form method="GET" class="filter-bar">
+        <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">Date</label>
+            <input type="date" name="date" class="form-control" value="{{ selected_date }}" style="max-width:180px"/>
+        </div>
+        <select name="course" class="form-control" style="max-width:180px">
+            <option value="">All Courses</option>
+            {% for c in courses %}
+            <option value="{{ c['course'] }}" {% if course_filter == c['course'] %}selected{% endif %}>{{ c['course'] }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-ghost"><i class="fas fa-filter"></i> View</button>
+    </form>
+</div>
+
+<form method="POST">
+    <input type="hidden" name="att_date" value="{{ selected_date }}"/>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title">
+                <i class="fas fa-calendar-day" style="color:var(--accent);margin-right:8px"></i>
+                {{ selected_date }}
+            </span>
+            <div style="display:flex;gap:8px;align-items:center">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="markAll(true)">
+                    <i class="fas fa-check-double" style="color:var(--green)"></i> All Present
+                </button>
+                <button type="button" class="btn btn-ghost btn-sm" onclick="markAll(false)">
+                    <i class="fas fa-xmark" style="color:var(--red)"></i> All Absent
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Attendance
+                </button>
+            </div>
+        </div>
+
+        {% if students %}
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th>#</th><th>Student</th><th>Roll No</th><th>Course</th><th>Year</th>
+                    <th style="text-align:center">Status</th>
+                </tr></thead>
+                <tbody>
+                {% for s in students %}
+                {% set current_status = att_records.get(s['id'], 'Present') %}
+                <tr id="row-{{ s['id'] }}" class="{% if current_status == 'Present' %}present-row{% else %}absent-row{% endif %}">
+                    <td style="color:var(--text-muted);font-size:12px">{{ loop.index }}</td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:8px">
+                            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;flex-shrink:0">
+                                {{ s['name'][0].upper() }}
+                            </div>
+                            <span style="font-weight:500">{{ s['name'] }}</span>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-blue">{{ s['roll_no'] }}</span></td>
+                    <td style="font-size:13px;color:var(--text-muted)">{{ s['course'] }}</td>
+                    <td><span class="badge badge-purple">Y{{ s['year'] }}</span></td>
+                    <td style="text-align:center">
+                        <label class="att-toggle">
+                            <span style="font-size:12px;color:var(--red);min-width:42px;text-align:right">Absent</span>
+                            <div class="toggle-switch">
+                                <input type="checkbox" name="att_{{ s['id'] }}"
+                                       {% if current_status == 'Present' %}checked{% endif %}
+                                       onchange="updateRow({{ s['id'] }}, this.checked)"/>
+                                <span class="toggle-slider"></span>
+                            </div>
+                            <span style="font-size:12px;color:var(--green);min-width:42px">Present</span>
+                        </label>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-users-slash"></i>
+            <h3>No students found</h3>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateRow(id, present) {
+    const row = document.getElementById('row-' + id);
+    row.className = present ? 'present-row' : 'absent-row';
+}
+function markAll(present) {
+    document.querySelectorAll('input[type="checkbox"][name^="att_"]').forEach(cb => {
+        cb.checked = present;
+        const id = cb.name.replace('att_','');
+        updateRow(id, present);
+    });
+}
+</script>
+<style>
+.present-row td { background: rgba(34,197,94,0.03) !important; }
+.absent-row td { background: rgba(239,68,68,0.03) !important; }
+</style>
+{% endblock %}

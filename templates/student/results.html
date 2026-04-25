@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}My Results — EduTrack{% endblock %}
+{% block page_title %}My Results{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2 class="section-title">My Results</h2>
+</div>
+
+<!-- Overall Stats -->
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+    <div class="stat-card" style="--glow-color:rgba(79,142,247,0.1)">
+        <div class="stat-label">Total Marks</div>
+        <div class="stat-value" style="color:var(--accent);font-size:22px">{{ overall.total_marks }}/{{ overall.max_marks }}</div>
+        <div class="stat-icon" style="background:rgba(79,142,247,0.1);color:var(--accent)"><i class="fas fa-hashtag"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(34,197,94,0.1)">
+        <div class="stat-label">Percentage</div>
+        <div class="stat-value" style="color:{% if overall.percentage >= 75 %}var(--green){% elif overall.percentage >= 50 %}var(--yellow){% else %}var(--red){% endif %}">{{ overall.percentage }}%</div>
+        <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i class="fas fa-percent"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(124,92,252,0.1)">
+        <div class="stat-label">Overall Grade</div>
+        <div class="stat-value" style="color:var(--accent2)">{{ overall.grade }}</div>
+        <div class="stat-icon" style="background:rgba(124,92,252,0.1);color:var(--accent2)"><i class="fas fa-trophy"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(245,158,11,0.1)">
+        <div class="stat-label">Subjects</div>
+        <div class="stat-value" style="color:var(--yellow)">{{ overall.subjects }}</div>
+        <div class="stat-icon" style="background:rgba(245,158,11,0.1);color:var(--yellow)"><i class="fas fa-book-open"></i></div>
+    </div>
+</div>
+
+<!-- Grade Key -->
+<div class="card" style="margin-bottom:20px;padding:14px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:12px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;margin-right:6px">Grade Scale:</span>
+        <span class="badge badge-green">A+ ≥ 90%</span>
+        <span class="badge badge-green">A ≥ 80%</span>
+        <span class="badge badge-blue">B ≥ 70%</span>
+        <span class="badge badge-yellow">C ≥ 60%</span>
+        <span class="badge badge-orange">D ≥ 50%</span>
+        <span class="badge badge-red">F &lt; 50%</span>
+    </div>
+</div>
+
+<!-- Results Table -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-list-check" style="color:var(--yellow);margin-right:8px"></i>Subject-wise Results</span>
+    </div>
+    {% if results %}
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>#</th>
+                <th>Subject</th>
+                <th>Exam Type</th>
+                <th>Marks</th>
+                <th>Performance</th>
+                <th>Grade</th>
+            </tr></thead>
+            <tbody>
+            {% for r in results %}
+            {% set grade_class = {'A+':'grade-aplus','A':'grade-a','B':'grade-b','C':'grade-c','D':'grade-d','F':'grade-f'}.get(r.grade, '') %}
+            <tr>
+                <td style="color:var(--text-muted);font-size:12px">{{ loop.index }}</td>
+                <td style="font-weight:600">{{ r.subject }}</td>
+                <td>
+                    <span class="badge badge-cyan">{{ r.exam_type }}</span>
+                </td>
+                <td style="font-weight:600">{{ r.marks }}<span style="color:var(--text-muted);font-weight:400">/{{ r.max_marks }}</span></td>
+                <td style="min-width:160px">
+                    <div style="display:flex;align-items:center;gap:10px">
+                        <div class="progress" style="flex:1;height:6px">
+                            <div class="progress-bar" style="width:{{ r.percentage }}%;background:
+                                {% if r.percentage >= 80 %}var(--green)
+                                {% elif r.percentage >= 70 %}var(--accent)
+                                {% elif r.percentage >= 60 %}var(--yellow)
+                                {% elif r.percentage >= 50 %}var(--orange)
+                                {% else %}var(--red){% endif %}">
+                            </div>
+                        </div>
+                        <span style="font-size:13px;color:var(--text-muted);min-width:36px">{{ r.percentage }}%</span>
+                    </div>
+                </td>
+                <td><strong class="{{ grade_class }}" style="font-size:16px">{{ r.grade }}</strong></td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Summary footer -->
+    <div style="margin-top:16px;padding:14px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+        <div style="font-size:14px;color:var(--text-muted)">
+            <strong style="color:var(--text)">{{ overall.subjects }}</strong> subjects ·
+            <strong style="color:var(--text)">{{ overall.total_marks }}</strong> total marks out of
+            <strong style="color:var(--text)">{{ overall.max_marks }}</strong>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+            <span style="font-size:14px;color:var(--text-muted)">Overall:</span>
+            <span style="font-size:18px;font-weight:800;font-family:'Syne',sans-serif;color:
+                {% if overall.percentage >= 80 %}var(--green)
+                {% elif overall.percentage >= 60 %}var(--accent)
+                {% elif overall.percentage >= 50 %}var(--yellow)
+                {% else %}var(--red){% endif %}">
+                {{ overall.percentage }}% — {{ overall.grade }}
+            </span>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-clipboard-list"></i>
+        <h3>No results available</h3>
+        <p>Your results will appear here once your teacher enters marks.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

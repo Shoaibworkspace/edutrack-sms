@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Profile — EduTrack{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2 class="section-title">My Profile</h2>
+</div>
+
+<div style="max-width:640px">
+    <!-- Profile Card -->
+    <div class="card" style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;gap:20px;padding-bottom:20px;border-bottom:1px solid var(--border);margin-bottom:20px">
+            <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:white;flex-shrink:0;box-shadow:0 8px 25px rgba(79,142,247,0.3)">
+                {{ student['name'][0].upper() }}
+            </div>
+            <div>
+                <h3 style="font-family:'Syne',sans-serif;font-size:22px;font-weight:800">{{ student['name'] }}</h3>
+                <p style="font-size:14px;color:var(--text-muted);margin-top:4px">{{ student['course'] }} · Year {{ student['year'] }}</p>
+                <span class="badge badge-blue" style="margin-top:8px">{{ student['roll_no'] }}</span>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+            {% set fields = [
+                ('Email', student['email'] or '—', 'envelope', 'accent'),
+                ('Phone', student['contact'] or '—', 'phone', 'green'),
+                ('Date of Birth', student['dob'] or '—', 'cake-candles', 'yellow'),
+                ('Address', student['address'] or '—', 'location-dot', 'cyan'),
+                ('Course', student['course'], 'graduation-cap', 'accent2'),
+                ('Year', 'Year ' + student['year']|string, 'calendar', 'orange'),
+            ] %}
+            {% for label, value, icon, color in fields %}
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+                <div style="width:32px;height:32px;background:rgba(79,142,247,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--{{ color }});font-size:13px;flex-shrink:0">
+                    <i class="fas fa-{{ icon }}"></i>
+                </div>
+                <div>
+                    <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px">{{ label }}</div>
+                    <div style="font-size:14px;margin-top:2px">{{ value }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card" style="background:rgba(79,142,247,0.05);border-color:rgba(79,142,247,0.15);padding:14px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-muted)">
+            <i class="fas fa-shield-halved" style="color:var(--accent)"></i>
+            To update your profile information, please contact your college administrator.
+        </div>
+    </div>
+</div>
+{% endblock %}

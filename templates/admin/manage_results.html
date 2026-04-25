@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Manage Results — {{ student['name'] }}{% endblock %}
+{% block page_title %}Manage Results{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:white">
+            {{ student['name'][0].upper() }}
+        </div>
+        <div>
+            <h2 class="section-title">{{ student['name'] }}</h2>
+            <p class="section-sub">{{ student['roll_no'] }} · {{ student['course'] }} · Year {{ student['year'] }}</p>
+        </div>
+    </div>
+    <a href="{{ url_for('admin_results') }}" class="btn btn-ghost">
+        <i class="fas fa-arrow-left"></i> Back
+    </a>
+</div>
+
+<!-- Overall Stats -->
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+    <div class="stat-card" style="--glow-color:rgba(79,142,247,0.1)">
+        <div class="stat-label">Subjects</div>
+        <div class="stat-value" style="color:var(--accent)">{{ overall.subjects }}</div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(34,197,94,0.1)">
+        <div class="stat-label">Total Marks</div>
+        <div class="stat-value" style="color:var(--green);font-size:22px">{{ overall.total_marks }}/{{ overall.max_marks }}</div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(124,92,252,0.1)">
+        <div class="stat-label">Percentage</div>
+        <div class="stat-value" style="color:var(--accent2)">{{ overall.percentage }}%</div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(245,158,11,0.1)">
+        <div class="stat-label">Overall Grade</div>
+        <div class="stat-value" style="color:var(--yellow)">{{ overall.grade }}</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Add/Edit Result -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-plus-circle" style="color:var(--accent);margin-right:8px"></i>Add / Update Marks</span>
+        </div>
+        <form method="POST">
+            <input type="hidden" name="action" value="add"/>
+            <div class="form-group">
+                <label class="form-label">Subject Name *</label>
+                <input type="text" name="subject" class="form-control" placeholder="e.g. Data Structures" required list="subject-list"/>
+                <datalist id="subject-list">
+                    {% set all_subjects = ['Data Structures','Algorithms','DBMS','Operating Systems','Computer Networks','Signals & Systems','Electronics','VLSI Design','Microprocessors','Communications','Thermodynamics','Fluid Mechanics','Machine Design','Manufacturing','Engineering Dynamics','Mathematics I','Mathematics II','Physics','Chemistry','English'] %}
+                    {% for s in all_subjects %}<option value="{{ s }}">{% endfor %}
+                </datalist>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Marks Obtained *</label>
+                    <input type="number" name="marks" class="form-control" min="0" max="100" placeholder="0–100" required/>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Maximum Marks</label>
+                    <input type="number" name="max_marks" class="form-control" value="100" min="1"/>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Exam Type</label>
+                    <select name="exam_type" class="form-control">
+                        <option value="Final">Final</option>
+                        <option value="Midterm">Midterm</option>
+                        <option value="Internal">Internal</option>
+                        <option value="Practical">Practical</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Semester</label>
+                    <select name="semester" class="form-control">
+                        {% for s in range(1,9) %}<option value="{{ s }}">Semester {{ s }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Save Marks</button>
+        </form>
+    </div>
+
+    <!-- Results List -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-list-check" style="color:var(--yellow);margin-right:8px"></i>Subject Results</span>
+        </div>
+        {% if results %}
+        <div class="table-wrap">
+            <table>
+                <thead><tr>
+                    <th>Subject</th><th>Marks</th><th>%</th><th>Grade</th><th></th>
+                </tr></thead>
+                <tbody>
+                {% for r in results %}
+                {% set grade_class = {'A+':'grade-aplus','A':'grade-a','B':'grade-b','C':'grade-c','D':'grade-d','F':'grade-f'}.get(r.grade,'') %}
+                <tr>
+                    <td>
+                        <div style="font-size:13px;font-weight:500">{{ r.subject }}</div>
+                        <div style="font-size:11px;color:var(--text-muted)">{{ r.exam_type }} · Sem {{ r.semester }}</div>
+                    </td>
+                    <td style="font-size:13px">{{ r.marks }}/{{ r.max_marks }}</td>
+                    <td style="font-size:13px">{{ r.percentage }}%</td>
+                    <td><strong class="{{ grade_class }}">{{ r.grade }}</strong></td>
+                    <td>
+                        <form method="POST" onsubmit="return confirm('Delete this result?')">
+                            <input type="hidden" name="action" value="delete"/>
+                            <input type="hidden" name="result_id" value="{{ r.id }}"/>
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:40px">
+            <i class="fas fa-clipboard"></i>
+            <h3>No results yet</h3>
+            <p>Add marks using the form on the left</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

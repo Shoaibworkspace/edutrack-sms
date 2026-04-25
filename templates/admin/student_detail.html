@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}{{ student['name'] }} — EduTrack{% endblock %}
+{% block page_title %}Student Profile{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <div style="display:flex;align-items:center;gap:16px">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:white">
+            {{ student['name'][0].upper() }}
+        </div>
+        <div>
+            <h2 class="section-title">{{ student['name'] }}</h2>
+            <p class="section-sub">{{ student['roll_no'] }} · {{ student['course'] }} · Year {{ student['year'] }}</p>
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{{ url_for('edit_student', sid=student['id']) }}" class="btn btn-ghost">
+            <i class="fas fa-pen"></i> Edit
+        </a>
+        <a href="{{ url_for('manage_results', sid=student['id']) }}" class="btn btn-primary">
+            <i class="fas fa-award"></i> Manage Results
+        </a>
+        <a href="{{ url_for('admin_students') }}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="stat-grid" style="margin-bottom:20px">
+    <div class="stat-card" style="--glow-color:rgba(34,197,94,0.1)">
+        <div class="stat-label">Attendance</div>
+        <div class="stat-value" style="color:{% if att_stats.percentage >= 75 %}var(--green){% else %}var(--red){% endif %}">
+            {{ att_stats.percentage }}%
+        </div>
+        <div class="stat-sub">{{ att_stats.present }}/{{ att_stats.total }} days</div>
+        <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i class="fas fa-calendar-check"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(79,142,247,0.1)">
+        <div class="stat-label">Overall %</div>
+        <div class="stat-value" style="color:var(--accent)">{{ result_stats.percentage }}%</div>
+        <div class="stat-sub">{{ result_stats.subjects }} subjects</div>
+        <div class="stat-icon" style="background:rgba(79,142,247,0.1);color:var(--accent)"><i class="fas fa-chart-bar"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(124,92,252,0.1)">
+        <div class="stat-label">Overall Grade</div>
+        <div class="stat-value" style="color:var(--accent2)">{{ result_stats.grade }}</div>
+        <div class="stat-sub">{{ result_stats.total_marks }}/{{ result_stats.max_marks }} marks</div>
+        <div class="stat-icon" style="background:rgba(124,92,252,0.1);color:var(--accent2)"><i class="fas fa-trophy"></i></div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Student Info -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-user" style="color:var(--accent);margin-right:8px"></i>Personal Info</span>
+        </div>
+        <div style="display:grid;gap:14px">
+            {% set fields = [('Email', student['email'] or '—', 'envelope'), ('Contact', student['contact'] or '—', 'phone'), ('Address', student['address'] or '—', 'location-dot'), ('Date of Birth', student['dob'] or '—', 'cake-candles'), ('Enrolled', student['created_at'][:10] if student['created_at'] else '—', 'calendar')] %}
+            {% for label, value, icon in fields %}
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:10px;background:var(--surface2);border-radius:8px">
+                <div style="width:32px;height:32px;background:rgba(79,142,247,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:13px;flex-shrink:0">
+                    <i class="fas fa-{{ icon }}"></i>
+                </div>
+                <div>
+                    <div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.4px">{{ label }}</div>
+                    <div style="font-size:14px;margin-top:2px">{{ value }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div class="card">
+        <div class="card-header">
+            <span class="card-title"><i class="fas fa-award" style="color:var(--yellow);margin-right:8px"></i>Subject Results</span>
+            <a href="{{ url_for('manage_results', sid=student['id']) }}" class="btn btn-ghost btn-sm">Manage</a>
+        </div>
+        {% if results %}
+        <div class="table-wrap">
+            <table>
+                <thead><tr><th>Subject</th><th>Marks</th><th>%</th><th>Grade</th></tr></thead>
+                <tbody>
+                {% for r in results %}
+                {% set grade_class = {'A+':'grade-aplus','A':'grade-a','B':'grade-b','C':'grade-c','D':'grade-d','F':'grade-f'}.get(r.grade, '') %}
+                <tr>
+                    <td style="font-size:13px">{{ r.subject }}</td>
+                    <td style="font-size:13px">{{ r.marks }}/{{ r.max_marks }}</td>
+                    <td style="font-size:13px">{{ r.percentage }}%</td>
+                    <td><strong class="{{ grade_class }}">{{ r.grade }}</strong></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state" style="padding:30px">
+            <i class="fas fa-clipboard-list" style="font-size:32px"></i>
+            <p>No results yet</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Recent Attendance -->
+<div class="card" style="margin-top:20px">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-calendar" style="color:var(--cyan);margin-right:8px"></i>Recent Attendance (Last 30 Days)</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+        {% for a in attendance %}
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+            <div style="width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;
+                background:{% if a['status']=='Present' %}rgba(34,197,94,0.15){% else %}rgba(239,68,68,0.15){% endif %};
+                color:{% if a['status']=='Present' %}var(--green){% else %}var(--red){% endif %};
+                border:1px solid {% if a['status']=='Present' %}rgba(34,197,94,0.3){% else %}rgba(239,68,68,0.3){% endif %};"
+                title="{{ a['date'] }} — {{ a['status'] }}">
+                <i class="fas fa-{% if a['status']=='Present' %}check{% else %}xmark{% endif %}"></i>
+            </div>
+            <span style="font-size:9px;color:var(--text-dim)">{{ a['date'][8:] }}/{{ a['date'][5:7] }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

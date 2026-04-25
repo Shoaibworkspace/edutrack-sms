@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — EduTrack{% endblock %}
+{% block page_title %}My Attendance{% endblock %}
+
+{% block content %}
+<div class="section-header">
+    <h2 class="section-title">My Attendance</h2>
+</div>
+
+<!-- Stats -->
+<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+    <div class="stat-card" style="--glow-color:rgba(34,197,94,0.1)">
+        <div class="stat-label">Percentage</div>
+        <div class="stat-value" style="color:{% if att_stats.percentage >= 75 %}var(--green){% else %}var(--red){% endif %}">{{ att_stats.percentage }}%</div>
+        <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i class="fas fa-percent"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(79,142,247,0.1)">
+        <div class="stat-label">Total Days</div>
+        <div class="stat-value" style="color:var(--accent)">{{ att_stats.total }}</div>
+        <div class="stat-icon" style="background:rgba(79,142,247,0.1);color:var(--accent)"><i class="fas fa-calendar"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(34,197,94,0.1)">
+        <div class="stat-label">Present</div>
+        <div class="stat-value" style="color:var(--green)">{{ att_stats.present }}</div>
+        <div class="stat-icon" style="background:rgba(34,197,94,0.1);color:var(--green)"><i class="fas fa-user-check"></i></div>
+    </div>
+    <div class="stat-card" style="--glow-color:rgba(239,68,68,0.1)">
+        <div class="stat-label">Absent</div>
+        <div class="stat-value" style="color:var(--red)">{{ att_stats.absent }}</div>
+        <div class="stat-icon" style="background:rgba(239,68,68,0.1);color:var(--red)"><i class="fas fa-user-slash"></i></div>
+    </div>
+</div>
+
+{% if att_stats.percentage < 75 %}
+<div class="card" style="background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2);margin-bottom:20px;padding:14px">
+    <div style="display:flex;align-items:center;gap:10px;font-size:14px;color:var(--red)">
+        <i class="fas fa-triangle-exclamation"></i>
+        <strong>Attendance Warning:</strong> Your attendance is below 75%. Please attend classes regularly to avoid academic penalties.
+    </div>
+</div>
+{% endif %}
+
+<!-- Calendar-style grid -->
+<div class="card">
+    <div class="card-header">
+        <span class="card-title"><i class="fas fa-calendar-days" style="color:var(--cyan);margin-right:8px"></i>Attendance History</span>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead><tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Day</th>
+                <th>Status</th>
+            </tr></thead>
+            <tbody>
+            {% for a in attendance %}
+            <tr>
+                <td style="color:var(--text-muted);font-size:12px">{{ loop.index }}</td>
+                <td style="font-weight:500">{{ a['date'] }}</td>
+                <td style="color:var(--text-muted);font-size:13px">
+                    {% set days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'] %}
+                    {{ a['date'] }}
+                </td>
+                <td>
+                    <span class="badge {% if a['status']=='Present' %}badge-green{% else %}badge-red{% endif %}">
+                        <i class="fas fa-{% if a['status']=='Present' %}check{% else %}xmark{% endif %}"></i>
+                        {{ a['status'] }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
