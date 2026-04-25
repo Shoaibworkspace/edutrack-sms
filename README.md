@@ -1,5 +1,21 @@
 # EduTrack — Student Management System
 
+## 📸 Screenshots
+
+### 🔐 Login
+![Login](screenshots/login.png)
+
+### 📊 Dashboard
+![Dashboard](screenshots/dashboard.png)
+
+### ✅ Attendance
+![Attendance](screenshots/attendance.png)
+
+### 🏆 Results
+![Results](screenshots/results.png)
+
+---
+
 A full-stack college Student Management System built with **Flask** and **SQLite**.
 
 ---
